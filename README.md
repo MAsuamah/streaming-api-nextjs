@@ -1,36 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AssemblyAI Streaming Transcription NextJs Example
 
-## Getting Started
+## Description
 
-First, run the development server:
+In this app, we grab an audio stream from the user's computer and then send that over a WebSocket to AssemblyAI for real-time transcription. Once AssemblyAI begins transcribing, we display the text in the browser.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## How To Install and Run the Project
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+##### ❗Important❗
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- Before running this app, you need to upgrade your AssemblyAI account. The Streaming API is only available to upgraded accounts.
+- To upgrade your account you need to add a card. You can do that in your dashboard [here](https://app.assemblyai.com/)!
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+##### Instructions
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Clone the repo to your local machine.
+2. Open a terminal in the main directory housing the project. In this case `streaming-api-nextjs`.
+3. Run `npm install` to ensure all dependencies are installed.
+4. Add your AssemblyAI key to line 8 in `src/app/api/token/route.js`.
+5. Start the app with the command `npm run dev` .
+6. Vist `http://localhost:3000/` in the browser and click "Record". As you speak the live transcription will appear in the webpage!
