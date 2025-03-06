@@ -8,7 +8,8 @@ export default function Home() {
   const mediaStream = useRef(null);
   const scriptProcessor = useRef(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState('');
+  const [transcript, setTranscript] = useState(''); // Stores finalized transcript
+  const [partialTranscript, setPartialTranscript] = useState(''); // Stores temporary partials
 
   const getToken = async () => {
     const response = await fetch('/api/token'); // Fetch temporary token 
@@ -60,8 +61,15 @@ export default function Home() {
     socket.current.onmessage = (event) => {
       const res = JSON.parse(event.data);
 
-      if (res.message_type === 'PartialTranscript' || res.message_type === 'FinalTranscript') {
-        setTranscript((prev) => prev + ' ' + res.text);
+      if (res.message_type === 'PartialTranscript') {
+        console.log('Partial:', res.text);
+        setPartialTranscript(res.text); // Temporarily store partial
+      }
+
+      if (res.message_type === 'FinalTranscript') {
+        console.log('Final:', res.text);
+        setTranscript((prev) => prev + ' ' + res.text); // Append final transcript
+        setPartialTranscript(''); // Clear the partial transcript
       }
     };
 
@@ -123,7 +131,7 @@ export default function Home() {
         )}
       </div>
       <div className="real-time-interface__message">
-        <p><strong>Transcript:</strong> {transcript}</p>
+        <p><strong>Transcript:</strong> {transcript} <span style={{ opacity: 0.6 }}>{partialTranscript}</span></p>
       </div>
     </div>
   );

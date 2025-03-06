@@ -5,7 +5,7 @@ export async function GET() {
     const response = await axios.post(
       'https://api.assemblyai.com/v2/realtime/token',
       { expires_in: 3600 },
-      { headers: { authorization: "<YOUR_API_KEY>" } }
+      { headers: { authorization: "de05d9591fb04023a9a91ff3f7188edd" } }
     );
 
     return Response.json(response.data, { status: 200 });
