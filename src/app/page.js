@@ -11,7 +11,7 @@ export default function Home() {
   const [transcript, setTranscript] = useState('');
 
   const getToken = async () => {
-    const response = await fetch('/api/token'); // Fetch AssemblyAI token from Next.js API
+    const response = await fetch('/api/token'); // Fetch temporary token 
     const data = await response.json();
 
     if (data.error) {
@@ -59,10 +59,8 @@ export default function Home() {
 
     socket.current.onmessage = (event) => {
       const res = JSON.parse(event.data);
-      console.log('WebSocket Message:', res); // Log entire message
 
       if (res.message_type === 'PartialTranscript' || res.message_type === 'FinalTranscript') {
-        console.log('Received Transcript:', res.text); // Log transcribed text
         setTranscript((prev) => prev + ' ' + res.text);
       }
     };
