@@ -8,8 +8,8 @@ export default function Home() {
   const mediaStream = useRef(null);
   const scriptProcessor = useRef(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState(''); // Stores finalized transcript
-  const [partialTranscript, setPartialTranscript] = useState(''); // Stores temporary partials
+  const [transcript, setTranscript] = useState(''); 
+  const [partialTranscript, setPartialTranscript] = useState(''); 
 
   const getToken = async () => {
     const response = await fetch('/api/token'); // Fetch temporary token 
@@ -34,7 +34,6 @@ export default function Home() {
       console.log('WebSocket connection established');
       setIsRecording(true);
 
-      // Request microphone access
       mediaStream.current = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioContext.current = new AudioContext({ sampleRate: 16000 });
 
@@ -63,13 +62,13 @@ export default function Home() {
 
       if (res.message_type === 'PartialTranscript') {
         console.log('Partial:', res.text);
-        setPartialTranscript(res.text); // Temporarily store partial
+        setPartialTranscript(res.text); 
       }
 
       if (res.message_type === 'FinalTranscript') {
         console.log('Final:', res.text);
-        setTranscript((prev) => prev + ' ' + res.text); // Append final transcript
-        setPartialTranscript(''); // Clear the partial transcript
+        setTranscript((prev) => prev + ' ' + res.text); 
+        setPartialTranscript(''); 
       }
     };
 
