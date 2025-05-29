@@ -7,17 +7,16 @@ export default function Home() {
   const audioContext = useRef(null);
   const mediaStream = useRef(null);
   const scriptProcessor = useRef(null);
+
   const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState(''); 
-  const [partialTranscript, setPartialTranscript] = useState(''); 
+  const [transcripts, setTranscripts] = useState({}); 
 
   const getToken = async () => {
-    const response = await fetch('/api/token'); // Fetch temporary token 
+    const response = await fetch('/api/token');
     const data = await response.json();
 
-    if (data.error) {
-      console.error('Error fetching token:', data.error);
-      alert(data.error);
+    if (!data || !data.token) {
+      alert('Failed to get token');
       return null;
     }
 
@@ -28,7 +27,10 @@ export default function Home() {
     const token = await getToken();
     if (!token) return;
 
-    socket.current = new WebSocket(`wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000&token=${token}`);
+    const wsUrl = `wss://streaming.assemblyai.com/v3/ws?sample_rate=16000&formatted_finals=true&token=${token}`;
+    socket.current = new WebSocket(wsUrl);
+
+    const turns = {}; // for storing transcript updates per turn
 
     socket.current.onopen = async () => {
       console.log('WebSocket connection established');
@@ -46,39 +48,38 @@ export default function Home() {
       scriptProcessor.current.onaudioprocess = (event) => {
         if (!socket.current || socket.current.readyState !== WebSocket.OPEN) return;
 
-        let inputData = event.inputBuffer.getChannelData(0);
-        let output = new Int16Array(inputData.length);
-
-        for (let i = 0; i < inputData.length; i++) {
-          output[i] = Math.min(1, inputData[i]) * 0x7FFF; // Convert float32 PCM -> PCM16
+        const input = event.inputBuffer.getChannelData(0);
+        const buffer = new Int16Array(input.length);
+        for (let i = 0; i < input.length; i++) {
+          buffer[i] = Math.max(-1, Math.min(1, input[i])) * 0x7fff;
         }
-
-        socket.current.send(output.buffer);
+        socket.current.send(buffer.buffer);
       };
     };
 
     socket.current.onmessage = (event) => {
-      const res = JSON.parse(event.data);
+      const message = JSON.parse(event.data);
 
-      if (res.message_type === 'PartialTranscript') {
-        console.log('Partial:', res.text);
-        setPartialTranscript(res.text); 
-      }
+      if (message.type === 'Turn') {
+        const { turn_order, transcript } = message;
+        turns[turn_order] = transcript;
 
-      if (res.message_type === 'FinalTranscript') {
-        console.log('Final:', res.text);
-        setTranscript((prev) => prev + ' ' + res.text); 
-        setPartialTranscript(''); 
+        const ordered = Object.keys(turns)
+          .sort((a, b) => Number(a) - Number(b))
+          .map((k) => turns[k])
+          .join(' ');
+
+        setTranscripts({ ...turns });
       }
     };
 
-    socket.current.onerror = (event) => {
-      console.error('WebSocket error:', event);
+    socket.current.onerror = (err) => {
+      console.error('WebSocket error:', err);
       stopRecording();
     };
 
-    socket.current.onclose = (event) => {
-      console.log('WebSocket closed:', event);
+    socket.current.onclose = () => {
+      console.log('WebSocket closed');
       socket.current = null;
     };
   };
@@ -102,19 +103,23 @@ export default function Home() {
     }
 
     if (socket.current) {
-      console.log('Ending session...');
-      socket.current.send(JSON.stringify({ terminate_session: true }));
+      socket.current.send(JSON.stringify({ type: 'Terminate' }));
       socket.current.close();
       socket.current = null;
     }
   };
 
+  const orderedTranscript = Object.keys(transcripts)
+    .sort((a, b) => Number(a) - Number(b))
+    .map((k) => transcripts[k])
+    .join(' ');
+
   return (
     <div className="App">
       <header>
-        <h1 className="header__title">Real-Time Transcription</h1>
+        <h1 className="header__title">Real-Time Transcription (v3)</h1>
         <p className="header__sub-title">
-          Try AssemblyAI's real-time transcription API!
+          Powered by AssemblyAI's latest real-time model
         </p>
       </header>
       <div className="real-time-interface">
@@ -130,8 +135,9 @@ export default function Home() {
         )}
       </div>
       <div className="real-time-interface__message">
-        <p><strong>Transcript:</strong> {transcript} <span style={{ opacity: 0.6 }}>{partialTranscript}</span></p>
+        <p><strong>Transcript:</strong> {orderedTranscript}</p>
       </div>
     </div>
   );
 }
+
